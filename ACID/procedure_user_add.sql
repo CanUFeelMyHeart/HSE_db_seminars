@@ -42,16 +42,29 @@ DO $$
 DECLARE
 	res_msg VARCHAR;
 BEGIN
-	CALL sp_user_add(
-		'Иван',
-		'Иванов',
-		'ivan_new@example.com',
-		'Москва',
-		NULL,
-		'1990-01-01',
-		res_msg
-	);
-	RAISE NOTICE 'Результат: %', res_msg;
+-- Начинаем транзакцию
+	BEGIN
+		-- Вызов процедуры
+		CALL sp_user_add(
+			'Мария',
+			'Петрова',
+			'maria@example.com',
+			'Санкт-Петербург',
+			NULL,
+			'1992-05-01',
+			res_msg
+		);
+		
+		IF res_msg <> 'OK' THEN
+			-- если есть ошибка, данные не добавляем
+			RAISE NOTICE 'Ошибка при вставке: %', res_msg;
+			ROLLBACK; -- откатывает к состонию "ДО транзакции"
+		ELSE
+			-- если все окей, то можно фиксировать изменения
+			COMMIT; -- Сохранить, если все ок
+			RAISE NOTICE 'Данные успешно добавлены';
+		END IF;
+	END;
 END;
 $$;
 
